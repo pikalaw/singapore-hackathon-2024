@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "singapore-hackathon-2024"
+version = "0.1.0"
+description = ""
+authors = ["Lawrence Tsang <pikalaw@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.7.4"
+devtools = "^0.12.2"
+beautifulsoup4 = "^4.12.3"
+googlesearch-python = "^1.2.4"
+streamlit = "^1.36.0"
+google-generativeai = "^0.7.0"
+google-api-python-client = "^2.134.0"
+google-auth-httplib2 = "^0.2.0"
+google-auth-oauthlib = "^1.2.0"
+google-ai-generativelanguage = "^0.6.5"
+google-labs-html-chunker = "^0.0.5"
+networkx = "^3.3"
+sympy = "^1.12.1"
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.10.0"
+black = "^24.4.2"
+pytest = "^8.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+ignore_missing_imports = true
