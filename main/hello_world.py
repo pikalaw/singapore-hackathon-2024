@@ -26,28 +26,7 @@ def send_message(recipient: str, text: str) -> Any:
     return {"success": True}
 
 
-class WorkSummary(BaseModel):
-    """A summary of the work done so far."""
-
-    work_done: str | None = Field(
-        description="A summary of the work done so far.",
-    )
-    next_steps: str | None = Field(
-        description="The next steps to be taken.",
-    )
-    rationale: str | None = Field(
-        description="The rationale behind the work done so far.",
-    )
-    recipient: str | None = Field(
-        description="The recipient of the work summary.",
-    )
-    message: str | None = Field(
-        description="The message to be sent to the recipient.",
-    )
-
-
-async def main() -> None:
-    # Function calling.
+async def function_calling() -> None:
     model = genai.GenerativeModel(
         model_name="gemini-1.5-pro-latest",
         generation_config=genai.GenerationConfig(
@@ -60,21 +39,76 @@ async def main() -> None:
     response = chat.send_message("Send a greeting to John.")
     print(response.text)
 
-    # JSON mode.
+
+class Date(BaseModel):
+    """A date entity."""
+
+    day: int = Field(
+        description="the day of the month",
+    )
+    month: int = Field(
+        description="the month of the year",
+    )
+    year: int = Field(
+        description="the year",
+    )
+
+
+class Song(BaseModel):
+    """A song entity."""
+
+    title: str = Field(
+        description="the title of the song",
+    )
+    artist: str = Field(
+        description="the singer or band of the song",
+    )
+    date: Date = Field(
+        description="the date the song was released",
+    )
+
+
+async def json_mode() -> None:
     parser = genai.GenerativeModel(
         model_name="gemini-1.5-pro-latest",
         generation_config=genai.GenerationConfig(
             temperature=0,
             response_mime_type="application/json",
-            response_schema=WorkSummary,
         ),
-        system_instruction="Extract the information into a JSON object.",
+        system_instruction=(
+            f"Extract the information into a JSON object of the following JSON schema: {Song.model_json_schema()}."
+        ),
     )
-    parse_response = parser.generate_content(response.text)
-    work_summary = WorkSummary(
-        work_done=None, next_steps=None, rationale=None, recipient=None, message=None
-    ).model_copy(update=json.loads(parse_response.text))
-    print(work_summary)
+    response = parser.generate_content(
+        """
+Song Title: "Bohemian Rhapsody"
+Artist: Queen
+Published Date: October 31, 1975
+
+Song Title: "Imagine"
+Artist: John Lennon
+Published Date: October 11, 1971
+
+Song Title: "Billie Jean"
+Artist: Michael Jackson
+Published Date: January 2, 1983
+
+Song Title: "Smells Like Teen Spirit"
+Artist: Nirvana
+Published Date: September 10, 1991
+
+Song Title: "Like a Rolling Stone"
+Artist: Bob Dylan
+Published Date: July 20, 1965
+"""
+    )
+    json_response = json.loads(response.text)
+    print(json_response)
+
+
+async def main() -> None:
+    await function_calling()
+    await json_mode()
 
 
 if __name__ == "__main__":
