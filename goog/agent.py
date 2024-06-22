@@ -6,7 +6,7 @@ from pydantic import BaseModel
 T = TypeVar("T")
 
 
-DEBUG = False
+_DEBUG = True
 
 
 def agent(
@@ -42,39 +42,63 @@ def agent(
         tools=tools,
     )
     chat = model.start_chat(enable_automatic_function_calling=True)
-    chat.send_message(data)
-    model_response = chat.send_message(
-        "Give the final response with details but without the intermediate reasoning. "
-        "Don't add anything else. "
-        "Just a succinct response."
-    )
 
-    if DEBUG:
-        for message in chat.history:
-            print(message)
+    message = data
+    i = 0
+    while True:
+        chat.send_message(message)
+        response = chat.send_message(
+            "Give the final response with details but without the intermediate reasoning. "
+            "Don't add anything else. "
+            "Just a succinct response."
+        )
+        if _DEBUG:
+            print("#### Chat starts")
+            for message in chat.history:
+                print(f"Message: {message}")
+            print("#### Chat ends")
 
-    if output_type is str:
-        return model_response.text
+        if output_type is str:
+            return response.text
+        assert issubclass(output_type, BaseModel)
 
+        try:
+            return _parse(response.text, model_name=model_name, output_type=output_type)  # type: ignore
+        except Exception as ex:
+            logging.error(f"Attempt #{i}. Failed to parse `{response.text}`: {ex}")
+            if i > 3:
+                raise
+            message = (
+                f"There's a problem with the final response. {ex}\n\n"
+                "Please resolve the error and restate the final response."
+            )
+            i += 1
+
+
+def _parse(answer: str, *, model_name: str, output_type: Type[T]) -> T:
     assert issubclass(output_type, BaseModel)
 
-    parser = genai.GenerativeModel(
+    model = genai.GenerativeModel(
         model_name=model_name,
         generation_config=genai.GenerationConfig(
             temperature=0,
             response_mime_type="application/json",
         ),
         system_instruction=(
-            f"Extract the information into a JSON object of the following JSON schema: {output_type.model_json_schema()}."
+            f"Extract the information into a JSON object by following this JSON schema: {output_type.model_json_schema()}."
         ),
     )
-    parser_response = parser.generate_content(model_response.text)
+    chat = model.start_chat()
 
-    if DEBUG:
-        print(f"Parsing {parser_response}")
+    response = chat.send_message(answer)
+    if _DEBUG:
+        print(f"Parsed: {response.text}")
 
     try:
-        return output_type.model_validate_json(parser_response.text)  # type: ignore
+        return output_type.model_validate_json(response.text)  # type: ignore
     except Exception as ex:
-        logging.error(f"Failed to parse the response: {parser_response.text}")
-        raise
+        feedback = chat.send_message(
+            f"Failed to parse the response. Reason: {ex}.\n\n"
+            "Please interpret the error message and provide a feedback on how to fix it."
+        )
+        raise ValueError(feedback) from ex

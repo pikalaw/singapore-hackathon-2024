@@ -13,7 +13,7 @@ def alice(request: str) -> str:
     Returns:
         The response from Alice.
     """
-    print(f"Flattering {request}.")
+    print(f"Flattering the message: {request}.")
     return agent(
         str,
         instruction="You are an expert with flattering languages. Please flatter me.",
@@ -149,6 +149,33 @@ def carol(request: str) -> str:
     )
 
 
+def current_datetime() -> str:
+    """Returns the current date and time.
+
+    Returns:
+        The current date and time.
+    """
+    print("Getting the current date and time.")
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def dave(request: str) -> str:
+    """Dave knows the current date and time. He also knows all dates for holidays and events.
+
+    Args:
+        request: The request to Dave.
+
+    Returns:
+        The response from Dave.
+    """
+    return agent(
+        str,
+        instruction="You have the clock to tell the current date and time.",
+        data=request,
+        tools=[current_datetime],
+    )
+
+
 class Date(BaseModel):
     """A date entity."""
 
@@ -172,6 +199,9 @@ class Payment(BaseModel):
     recipient: str = Field(
         description="the recipient of the payment",
     )
+    date: Date = Field(
+        description="the date of the payment",
+    )
 
 
 def boss(work: str) -> Payment:
@@ -179,7 +209,7 @@ def boss(work: str) -> Payment:
         Payment,
         instruction="You are the boss. Please assign tasks to Alice, Bob, and Carol.",
         data=work,
-        tools=[alice, bob, carol],
+        tools=[alice, bob, carol, dave],
     )
 
 
