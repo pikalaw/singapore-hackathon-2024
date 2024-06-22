@@ -1,7 +1,7 @@
 from typing import Type, TypeVar
 import google.generativeai as genai
 import logging
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 T = TypeVar("T")
 
@@ -64,14 +64,11 @@ def agent(
 
         try:
             return _parse(response.text, model_name=model_name, output_type=output_type)  # type: ignore
-        except Exception as ex:
+        except ValidationError as ex:
             logging.error(f"Attempt #{i}. Failed to parse `{response.text}`: {ex}")
             if i > 3:
-                raise
-            message = (
-                f"There's a problem with the final response. {ex}\n\n"
-                "Please resolve the error and restate the final response."
-            )
+                raise RuntimeError(response.text) from ex
+            message = _format_feedback(ex, output_type)
             i += 1
 
 
@@ -88,17 +85,24 @@ def _parse(answer: str, *, model_name: str, output_type: Type[T]) -> T:
             f"Extract the information into a JSON object by following this JSON schema: {output_type.model_json_schema()}."
         ),
     )
-    chat = model.start_chat()
-
-    response = chat.send_message(answer)
+    response = model.generate_content(answer)
     if _DEBUG:
         print(f"Parsed: {response.text}")
 
-    try:
-        return output_type.model_validate_json(response.text)  # type: ignore
-    except Exception as ex:
-        feedback = chat.send_message(
-            f"Failed to parse the response. Reason: {ex}.\n\n"
-            "Please interpret the error message and provide a feedback on how to fix it."
-        )
-        raise ValueError(feedback) from ex
+    return output_type.model_validate_json(response.text)  # type: ignore
+
+
+def _format_feedback(e: ValidationError, cls: Type[BaseModel]) -> str:
+    error_details = [
+        f"Error #{i + 1}:\n"
+        f"Field: {error['loc']}\n"
+        f"Field description: {cls.model_fields[str(error['loc'][0])].description}\n"
+        f"Invalid value: {error['input']}\n"
+        f"Error message: {error['msg']}\n"
+        for i, error in enumerate(e.errors())
+    ]
+    return "\n\n".join(
+        [f"Failed to parse the final response into a JSON object."]
+        + error_details
+        + ["Please resolve the error and restate the final response."]
+    )
