@@ -1,4 +1,3 @@
-import asyncio
 import google.generativeai as genai
 import json
 from pydantic import BaseModel, Field
@@ -26,7 +25,7 @@ def send_message(recipient: str, text: str) -> Any:
     return {"success": True}
 
 
-async def function_calling() -> None:
+def function_calling() -> None:
     model = genai.GenerativeModel(
         model_name="gemini-1.5-pro-latest",
         generation_config=genai.GenerationConfig(
@@ -68,7 +67,7 @@ class Song(BaseModel):
     )
 
 
-async def json_mode() -> None:
+def json_mode() -> None:
     parser = genai.GenerativeModel(
         model_name="gemini-1.5-pro-latest",
         generation_config=genai.GenerationConfig(
@@ -106,10 +105,10 @@ Published Date: July 20, 1965
     print(json_response)
 
 
-async def main() -> None:
-    await function_calling()
-    await json_mode()
+def main() -> None:
+    function_calling()
+    json_mode()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
