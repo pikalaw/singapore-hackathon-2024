@@ -96,8 +96,8 @@ async def _parse(answer: str, *, model_name: str, output_type: Type[T]) -> T:
         ),
         system_instruction=(
             "I will give you a passage that may have both the intermediate step-by-step thoughts and the final conclusion. "
-            "Ignore the intermediate steps but extract the conclusion of the passage. "
-            f"Use this JSON schema: {output_type.model_json_schema()}."
+            "Ignore the intermediate steps but extract the conclusion of the passage into a JSON object. "
+            f"Use this JSON schema: {output_type.model_json_schema()}.\n\n"
         ),
     )
     response = await model.generate_content_async(answer)

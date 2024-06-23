@@ -16,16 +16,16 @@ async def current_datetime() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-class NextBrowse(BaseModel):
-    """Suggestions to browse next."""
+class TopLinks(BaseModel):
+    """Top links."""
 
-    topics: list[str] = Field(
+    links: list[str] = Field(
         default_factory=list,
-        description="the topics to browse next",
+        description="The top links.",
     )
 
 
-async def chelsea(request: str) -> NextBrowse:
+async def chelsea(request: str) -> TopLinks:
     """Chelsea is an expert in web scraping and web searching.
 
     Args:
@@ -35,7 +35,7 @@ async def chelsea(request: str) -> NextBrowse:
         The response from Chelsea.
     """
     return await agent.agent(
-        NextBrowse,
+        TopLinks,
         instruction="You are an expert in suggesting what are the best topics to follow up on after reading some web content.",
         data=request,
         tools=[
@@ -48,7 +48,7 @@ async def chelsea(request: str) -> NextBrowse:
 
 async def main() -> None:
     agent.configure(debug=True)
-    suggestions = await chelsea("Front page of the New York Times today.")
+    suggestions = await chelsea("Top 10 news today")
     debug(suggestions)
 
 
