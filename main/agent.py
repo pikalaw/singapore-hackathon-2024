@@ -1,3 +1,5 @@
+from agents.math_professor import math_professor
+from agents.webber import web_scraper, web_searcher
 import asyncio
 from datetime import datetime
 from devtools import debug
@@ -19,110 +21,6 @@ async def alice(request: str) -> str:
         str,
         instruction="You are an expert with flattering languages. Please flatter me.",
         data=request,
-    )
-
-
-async def add(a: float, b: float) -> float:
-    """Adds two numbers together.
-
-    Args:
-        a: The first number.
-        b: The second number.
-
-    Returns:
-        The sum of the two numbers.
-    """
-    print(f"Adding {a} and {b}.")
-    return a + b
-
-
-async def subtract(a: float, b: float) -> float:
-    """Subtracts one number from another.
-
-    Args:
-        a: The first number.
-        b: The second number.
-
-    Returns:
-        The difference between the two numbers.
-    """
-    print(f"Subtracting {b} from {a}.")
-    return a - b
-
-
-async def multiply(a: float, b: float) -> float:
-    """Multiplies two numbers together.
-
-    Args:
-        a: The first number.
-        b: The second number.
-
-    Returns:
-        The product of the two numbers.
-    """
-    print(f"Multiplying {a} by {b}.")
-    return a * b
-
-
-async def divide(a: float, b: float) -> float:
-    """Divides one number by another.
-
-    Args:
-        a: The first number.
-        b: The second number.
-
-    Returns:
-        The result of dividing the two.
-    """
-    print(f"Dividing {a} by {b}.")
-    return a / b
-
-
-async def math(expression: str) -> float:
-    """Evaluates a mathematical expression.
-
-    Args:
-        expression: The mathematical expression to evaluate.
-
-    Returns:
-        The result of the mathematical expression.
-    """
-    print(f"Evaluating the expression: {expression}.")
-    return eval(expression)
-
-
-async def diff_date(a: str, b: str) -> int:
-    """Calculates the difference between two dates.
-
-    Args:
-        a: The first date in YYYY-MM-DD.
-        b: The second date in YYYY-MM-DD.
-
-    Returns:
-        The number of days from a to b.
-    """
-    print(f"Calculating the difference between {a} and {b}.")
-    date_format = "%Y-%m-%d"
-    date_a = datetime.strptime(a, date_format).date()
-    date_b = datetime.strptime(b, date_format).date()
-
-    return (date_a - date_b).days
-
-
-async def bob(request: str) -> str:
-    """Bob is an expert in math. Can handle arithmetic operations and date differences.
-
-    Args:
-        request: The request to Bob.
-
-    Returns:
-        The response from Bob.
-    """
-    return await agent(
-        str,
-        instruction="You are an expert with math. Please solve this math problem.",
-        data=request,
-        tools=[add, subtract, multiply, divide, math, diff_date],
     )
 
 
@@ -182,6 +80,7 @@ async def dave(request: str) -> str:
     Returns:
         The response from Dave.
     """
+    print(f"Getting the date for the request: {request}.")
     return await agent(
         str,
         instruction="""You have the clock to tell the current date and time.
@@ -242,17 +141,25 @@ class Payment(BaseModel):
 async def boss(work: str) -> Payment:
     return await agent(
         Payment,
-        instruction="You are the boss. Please assign tasks to Alice, Bob, Carol, and Dave.",
+        instruction="You are the boss. Please assign tasks to your workers.",
         data=work,
-        tools=[alice, bob, carol, dave],
+        tools=[
+            alice,
+            carol,
+            dave,
+            math_professor,
+            web_scraper,
+            web_searcher,
+        ],
     )
 
 
 async def main() -> None:
     payment = await boss(
-        f"Zoey will receive a payment in the sum of $18 for every day between Easter 2022 and Christmas 2024. "
-        "Ascertain and total sum. "
-        "Notify her via a flattering email informing her the total sum. "
+        "Zoey is working for you on a project that will last from Easter 2022 to Christmas 2024. "
+        "She is paid with 3.5 times of the minimum wage in New York. "
+        "She wants to get paid in full today. "
+        "Notify her via a flattering email informing her the payment. "
         "Tell her you will sign the check today."
     )
     debug(payment)
