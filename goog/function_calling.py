@@ -1,4 +1,5 @@
 import asyncio
+import google.generativeai as genai
 from google.generativeai import protos
 from pydantic import BaseModel, Field, field_validator
 import logging
@@ -90,3 +91,46 @@ class FunctionCalling(BaseModel, frozen=True):
             for response in results
             if not isinstance(response, Exception)
         ]
+
+
+class ChatSession(BaseModel, frozen=True):
+    model: genai.GenerativeModel
+    tools: FunctionCalling | None = Field(default=None)
+    conversation: list[genai.protos.Content] = Field(default_factory=list)
+
+    async def send_message(
+        self,
+        message: genai.types.ContentType,
+    ) -> genai.types.GenerateContentResponse:
+        while True:
+            response = await self.model.generate_content_async(self.conversation)
+            _check_response(response)
+
+            response_content = response.candidates[0].content
+            self.conversation.append(response_content)
+
+            if (not self.tools) or (
+                len([part for part in response_content.parts if part.function_call])
+                == 0
+            ):
+                break
+
+            function_calling_response_parts = await self.tools.call_parallelly(
+                response_content.parts
+            )
+            self.conversation.append(
+                genai.protos.Content(parts=function_calling_response_parts, role="user")
+            )
+
+        return response
+
+
+def _check_response(response: genai.types.AsyncGenerateContentResponse) -> None:
+    if response.prompt_feedback.block_reason:
+        raise genai.types.BlockedPromptException(response.prompt_feedback)
+    if response.candidates[0].finish_reason not in (
+        genai.protos.Candidate.FinishReason.FINISH_REASON_UNSPECIFIED,
+        genai.protos.Candidate.FinishReason.STOP,
+        genai.protos.Candidate.FinishReason.MAX_TOKENS,
+    ):
+        raise genai.types.StopCandidateException(response.candidates[0])

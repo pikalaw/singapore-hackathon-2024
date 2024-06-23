@@ -1,10 +1,12 @@
+import asyncio
+from goog.function_calling import FunctionCalling
 import google.generativeai as genai
 import json
 from pydantic import BaseModel, Field
 from typing import Any
 
 
-def send_message(recipient: str, text: str) -> Any:
+async def send_message(recipient: str, text: str) -> Any:
     """Sends a message to the recipient.
 
     Args:
@@ -25,18 +27,54 @@ def send_message(recipient: str, text: str) -> Any:
     return {"success": True}
 
 
-def function_calling() -> None:
+async def function_calling() -> None:
+    function_calling = FunctionCalling(functions=[send_message])
     model = genai.GenerativeModel(
         model_name="gemini-1.5-pro-latest",
         generation_config=genai.GenerationConfig(
             temperature=0.6,
         ),
         system_instruction="Explain your thoughts. If you made an error, go right ahead and try again. ",
-        tools=[send_message],
+        tools=function_calling.functions,
     )
-    chat = model.start_chat(enable_automatic_function_calling=True)
-    response = chat.send_message("Send a greeting to John.")
+
+    conversation = [
+        genai.protos.Content(
+            parts=[
+                genai.protos.Part(text="Send a message to John saying 'Hello, John!'")
+            ],
+            role="user",
+        ),
+    ]
+    while True:
+        response = await model.generate_content_async(conversation)
+        _check_response(response)
+
+        response_content = response.candidates[0].content
+        conversation.append(response_content)
+
+        if len([part for part in response_content.parts if part.function_call]) == 0:
+            break
+
+        function_calling_response_parts = await function_calling.call_parallelly(
+            response_content.parts
+        )
+        conversation.append(
+            genai.protos.Content(parts=function_calling_response_parts, role="user")
+        )
+
     print(response.text)
+
+
+def _check_response(response: genai.types.AsyncGenerateContentResponse) -> None:
+    if response.prompt_feedback.block_reason:
+        raise genai.types.BlockedPromptException(response.prompt_feedback)
+    if response.candidates[0].finish_reason not in (
+        genai.protos.Candidate.FinishReason.FINISH_REASON_UNSPECIFIED,
+        genai.protos.Candidate.FinishReason.STOP,
+        genai.protos.Candidate.FinishReason.MAX_TOKENS,
+    ):
+        raise genai.types.StopCandidateException(response.candidates[0])
 
 
 class Date(BaseModel):
@@ -67,7 +105,7 @@ class Song(BaseModel):
     )
 
 
-def json_mode() -> None:
+async def json_mode() -> None:
     parser = genai.GenerativeModel(
         model_name="gemini-1.5-pro-latest",
         generation_config=genai.GenerationConfig(
@@ -105,10 +143,10 @@ Published Date: July 20, 1965
     print(json_response)
 
 
-def main() -> None:
-    function_calling()
-    json_mode()
+async def main() -> None:
+    await function_calling()
+    await json_mode()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
