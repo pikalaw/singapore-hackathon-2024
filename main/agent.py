@@ -22,7 +22,7 @@ async def alice(request: str) -> str:
     )
 
 
-async def add(a: int, b: int) -> int:
+async def add(a: float, b: float) -> float:
     """Adds two numbers together.
 
     Args:
@@ -36,7 +36,7 @@ async def add(a: int, b: int) -> int:
     return a + b
 
 
-async def subtract(a: int, b: int) -> int:
+async def subtract(a: float, b: float) -> float:
     """Subtracts one number from another.
 
     Args:
@@ -50,7 +50,7 @@ async def subtract(a: int, b: int) -> int:
     return a - b
 
 
-async def multiply(a: int, b: int) -> int:
+async def multiply(a: float, b: float) -> float:
     """Multiplies two numbers together.
 
     Args:
@@ -64,7 +64,7 @@ async def multiply(a: int, b: int) -> int:
     return a * b
 
 
-async def divide(a: int, b: int) -> int:
+async def divide(a: float, b: float) -> float:
     """Divides one number by another.
 
     Args:
@@ -72,10 +72,23 @@ async def divide(a: int, b: int) -> int:
         b: The second number.
 
     Returns:
-        The quotient of the two numbers.
+        The result of dividing the two.
     """
     print(f"Dividing {a} by {b}.")
-    return a // b
+    return a / b
+
+
+async def math(expression: str) -> float:
+    """Evaluates a mathematical expression.
+
+    Args:
+        expression: The mathematical expression to evaluate.
+
+    Returns:
+        The result of the mathematical expression.
+    """
+    print(f"Evaluating the expression: {expression}.")
+    return eval(expression)
 
 
 async def diff_date(a: str, b: str) -> int:
@@ -97,7 +110,7 @@ async def diff_date(a: str, b: str) -> int:
 
 
 async def bob(request: str) -> str:
-    """Bob is an expert in math.
+    """Bob is an expert in math. Can handle arithmetic operations and date differences.
 
     Args:
         request: The request to Bob.
@@ -109,7 +122,7 @@ async def bob(request: str) -> str:
         str,
         instruction="You are an expert with math. Please solve this math problem.",
         data=request,
-        tools=[add, subtract, multiply, divide, diff_date],
+        tools=[add, subtract, multiply, divide, math, diff_date],
     )
 
 

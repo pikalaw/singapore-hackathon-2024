@@ -8,7 +8,7 @@ from typing import Type, TypeVar
 T = TypeVar("T")
 
 
-_DEBUG = True
+_DEBUG = False
 
 
 async def agent(
