@@ -8,6 +8,7 @@ import logging
 import time
 from typing import (
     Any,
+    Awaitable,
     Callable,
     ParamSpec,
     TypeVar,
@@ -16,7 +17,7 @@ from typing import (
 
 P = ParamSpec("P")
 R = TypeVar("R")
-F = Callable[P, R]
+F = Callable[P, Awaitable[R]]
 
 
 _MAX_INTERNAL_SERVER_ERRORS = 5
@@ -24,12 +25,12 @@ _MAX_INTERNAL_SERVER_ERRORS = 5
 
 def retry_on_server_error(func: F) -> F:
     @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
         wait_time = 1
         try_count = 1
         while True:
             try:
-                return func(*args, **kwargs)
+                return await func(*args, **kwargs)
             except (DeadlineExceeded, InternalServerError) as e:
                 if try_count >= _MAX_INTERNAL_SERVER_ERRORS:
                     raise

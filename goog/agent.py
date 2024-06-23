@@ -1,4 +1,5 @@
 from goog.decorators import retry_on_server_error
+from goog.function_calling import ChatSession, FunctionCalling
 import google.generativeai as genai
 import logging
 from pydantic import BaseModel, ValidationError
@@ -10,7 +11,7 @@ T = TypeVar("T")
 _DEBUG = True
 
 
-def agent(
+async def agent(
     output_type: Type[T],
     *,
     instruction: str,
@@ -37,18 +38,19 @@ def agent(
         "If you made an error, go right ahead to fix the problem and try again. "
         "When you have figured out the answer, restate clearly what the final response is with full details but without the intermediate steps."
     )
+    function_calling = FunctionCalling(functions=tools)
     model = genai.GenerativeModel(
         model_name=model_name,
         generation_config=generation_config,
         system_instruction=system_instruction,
-        tools=tools,
+        tools=function_calling.functions,
     )
-    chat = model.start_chat(enable_automatic_function_calling=True)
+    chat = ChatSession(model=model, tools=function_calling)
 
     message = data or "Begin."
     i = 0
     while True:
-        response = _send_message(chat, message)
+        response = await _send_message(chat, message)
         if _DEBUG:
             print(
                 "#### Chat starts ##############################################################"
@@ -64,7 +66,7 @@ def agent(
         assert issubclass(output_type, BaseModel)
 
         try:
-            return _parse(response.text, model_name=model_name, output_type=output_type)  # type: ignore
+            return await _parse(response.text, model_name=model_name, output_type=output_type)  # type: ignore
         except ValidationError as ex:
             logging.error(f"Attempt #{i}. Failed to parse `{response.text}`: {ex}")
             if i > 3:
@@ -73,7 +75,7 @@ def agent(
             i += 1
 
 
-def _parse(answer: str, *, model_name: str, output_type: Type[T]) -> T:
+async def _parse(answer: str, *, model_name: str, output_type: Type[T]) -> T:
     assert issubclass(output_type, BaseModel)
 
     model = genai.GenerativeModel(
@@ -87,7 +89,7 @@ def _parse(answer: str, *, model_name: str, output_type: Type[T]) -> T:
             f"extract the conclusion of a passage into a JSON object by following this JSON schema: {output_type.model_json_schema()}."
         ),
     )
-    response = model.generate_content(answer)
+    response = await model.generate_content_async(answer)
     if _DEBUG:
         print(f"Parsed: {response.text}")
 
@@ -111,7 +113,7 @@ def _format_feedback(e: ValidationError, cls: Type[BaseModel]) -> str:
 
 
 @retry_on_server_error
-def _send_message(
-    chat: genai.ChatSession, message: genai.types.ContentType
+async def _send_message(
+    chat: ChatSession, message: genai.types.ContentType
 ) -> genai.types.GenerateContentResponse:
-    return chat.send_message(message)
+    return await chat.send_message(message)

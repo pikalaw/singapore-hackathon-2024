@@ -1,10 +1,11 @@
+import asyncio
 from datetime import datetime
 from devtools import debug
 from goog.agent import agent
 from pydantic import BaseModel, Field
 
 
-def alice(request: str) -> str:
+async def alice(request: str) -> str:
     """Alice is an expert in flattery languages.
 
     Args:
@@ -14,14 +15,14 @@ def alice(request: str) -> str:
         The response from Alice.
     """
     print(f"Flattering the message: {request}.")
-    return agent(
+    return await agent(
         str,
         instruction="You are an expert with flattering languages. Please flatter me.",
         data=request,
     )
 
 
-def add(a: int, b: int) -> int:
+async def add(a: int, b: int) -> int:
     """Adds two numbers together.
 
     Args:
@@ -35,7 +36,7 @@ def add(a: int, b: int) -> int:
     return a + b
 
 
-def subtract(a: int, b: int) -> int:
+async def subtract(a: int, b: int) -> int:
     """Subtracts one number from another.
 
     Args:
@@ -49,7 +50,7 @@ def subtract(a: int, b: int) -> int:
     return a - b
 
 
-def multiply(a: int, b: int) -> int:
+async def multiply(a: int, b: int) -> int:
     """Multiplies two numbers together.
 
     Args:
@@ -63,7 +64,7 @@ def multiply(a: int, b: int) -> int:
     return a * b
 
 
-def divide(a: int, b: int) -> int:
+async def divide(a: int, b: int) -> int:
     """Divides one number by another.
 
     Args:
@@ -77,7 +78,7 @@ def divide(a: int, b: int) -> int:
     return a // b
 
 
-def diff_date(a: str, b: str) -> int:
+async def diff_date(a: str, b: str) -> int:
     """Calculates the difference between two dates.
 
     Args:
@@ -95,7 +96,7 @@ def diff_date(a: str, b: str) -> int:
     return (date_a - date_b).days
 
 
-def bob(request: str) -> str:
+async def bob(request: str) -> str:
     """Bob is an expert in math.
 
     Args:
@@ -104,7 +105,7 @@ def bob(request: str) -> str:
     Returns:
         The response from Bob.
     """
-    return agent(
+    return await agent(
         str,
         instruction="You are an expert with math. Please solve this math problem.",
         data=request,
@@ -112,7 +113,7 @@ def bob(request: str) -> str:
     )
 
 
-def send_mail(recipient: str, sender: str, subject: str, body: str) -> bool:
+async def send_mail(recipient: str, sender: str, subject: str, body: str) -> bool:
     """Sends an email.
 
     Args:
@@ -130,7 +131,7 @@ def send_mail(recipient: str, sender: str, subject: str, body: str) -> bool:
     return True
 
 
-def carol(request: str) -> str:
+async def carol(request: str) -> str:
     """Carol is an emailer.
 
     She can send email on behalf of others.
@@ -141,7 +142,7 @@ def carol(request: str) -> str:
     Returns:
         The response from Carol.
     """
-    return agent(
+    return await agent(
         str,
         instruction="You are an expert with email. Please send an email on behalf of John to Bob.",
         data=request,
@@ -149,7 +150,7 @@ def carol(request: str) -> str:
     )
 
 
-def current_datetime() -> str:
+async def current_datetime() -> str:
     """Returns the current date and time.
 
     Returns:
@@ -159,7 +160,7 @@ def current_datetime() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def dave(request: str) -> str:
+async def dave(request: str) -> str:
     """Dave knows the current date and time. He also knows all dates for holidays and events.
 
     Args:
@@ -168,7 +169,7 @@ def dave(request: str) -> str:
     Returns:
         The response from Dave.
     """
-    return agent(
+    return await agent(
         str,
         instruction="""You have the clock to tell the current date and time.
 
@@ -225,8 +226,8 @@ class Payment(BaseModel):
     )
 
 
-def boss(work: str) -> Payment:
-    return agent(
+async def boss(work: str) -> Payment:
+    return await agent(
         Payment,
         instruction="You are the boss. Please assign tasks to Alice, Bob, Carol, and Dave.",
         data=work,
@@ -234,8 +235,8 @@ def boss(work: str) -> Payment:
     )
 
 
-def main() -> None:
-    payment = boss(
+async def main() -> None:
+    payment = await boss(
         f"Zoey will receive a payment in the sum of $18 for every day between Easter 2022 and Christmas 2024. "
         "Ascertain and total sum. "
         "Notify her via a flattering email informing her the total sum. "
@@ -245,4 +246,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

@@ -27,6 +27,10 @@ class FunctionCalling(BaseModel, frozen=True):
                 raise ValueError("Function names must be unique.")
         return functions
 
+    @property
+    def has_functions(self) -> bool:
+        return self.functions is not None and len(self.functions) > 0
+
     def model_post_init(self, _):
         if self.functions:
             if isinstance(self.functions, list):
@@ -98,6 +102,10 @@ class ChatSession(BaseModel, frozen=True, arbitrary_types_allowed=True):
     tools: FunctionCalling | None = Field(default=None)
     conversation: list[genai.protos.Content] = Field(default_factory=list)
 
+    @property
+    def history(self) -> Iterable[genai.protos.Content]:
+        return self.conversation
+
     async def send_message(
         self,
         message: genai.types.ContentType,
@@ -113,9 +121,13 @@ class ChatSession(BaseModel, frozen=True, arbitrary_types_allowed=True):
             response_content = response.candidates[0].content
             self.conversation.append(response_content)
 
-            if (not self.tools) or (
-                len([part for part in response_content.parts if part.function_call])
-                == 0
+            if (
+                (not self.tools)
+                or (not self.tools.has_functions)
+                or (
+                    len([part for part in response_content.parts if part.function_call])
+                    == 0
+                )
             ):
                 break
 
