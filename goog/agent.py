@@ -3,7 +3,7 @@ from goog.function_calling import ChatSession, FunctionCalling
 import google.generativeai as genai
 import logging
 from pydantic import BaseModel, ValidationError
-from typing import Type, TypeVar
+from typing import Any, Awaitable, Callable, Iterable, Type, TypeVar
 
 T = TypeVar("T")
 
@@ -26,7 +26,7 @@ async def agent(
     *,
     instruction: str,
     data: genai.types.ContentType | None = None,
-    tools: genai.types.FunctionLibraryType | None = None,
+    tools: Iterable[Callable[..., Awaitable[Any]]] | None = None,
     generation_config: genai.GenerationConfig | None = None,
     model_name: str = "gemini-1.5-pro-latest",
 ) -> T:
@@ -48,7 +48,7 @@ async def agent(
         "If you made an error, go right ahead to fix the problem and try again. "
         "When you have figured out the answer, restate clearly what the final response is with full details but without the intermediate steps."
     )
-    function_calling = FunctionCalling(functions=tools)
+    function_calling = FunctionCalling(functions=list(tools) if tools else None)
     model = genai.GenerativeModel(
         model_name=model_name,
         generation_config=generation_config,

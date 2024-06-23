@@ -3,7 +3,7 @@ import google.generativeai as genai
 from google.generativeai import protos
 from pydantic import BaseModel, Field, field_validator
 import logging
-from typing import Any, AsyncIterator, Awaitable, Callable, Iterable
+from typing import Any, AsyncIterator, Awaitable, Callable, Iterable, Mapping
 
 
 class FunctionCalling(BaseModel, frozen=True):
