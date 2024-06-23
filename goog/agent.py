@@ -11,6 +11,16 @@ T = TypeVar("T")
 _DEBUG = False
 
 
+def configure(*, debug: bool = False) -> None:
+    """Configures the agent module.
+
+    Args:
+        debug: Whether to enable debug mode.
+    """
+    global _DEBUG
+    _DEBUG = debug
+
+
 async def agent(
     output_type: Type[T],
     *,
@@ -85,8 +95,9 @@ async def _parse(answer: str, *, model_name: str, output_type: Type[T]) -> T:
             response_mime_type="application/json",
         ),
         system_instruction=(
-            f"Given a passage that has both the intermediate step-by-step thoughts and the final conclusion, "
-            f"extract the conclusion of a passage into a JSON object by following this JSON schema: {output_type.model_json_schema()}."
+            "I will give you a passage that may have both the intermediate step-by-step thoughts and the final conclusion. "
+            "Ignore the intermediate steps but extract the conclusion of the passage. "
+            f"Use this JSON schema: {output_type.model_json_schema()}."
         ),
     )
     response = await model.generate_content_async(answer)

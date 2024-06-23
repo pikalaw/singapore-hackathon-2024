@@ -5,10 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Module",
+            "name": "main.agent",
             "type": "debugpy",
             "request": "launch",
             "module": "main.agent",
+            "justMyCode": false
+        },
+        {
+            "name": "main.chelsea",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "main.chelsea",
             "justMyCode": false
         }
     ]

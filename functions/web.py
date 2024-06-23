@@ -30,7 +30,7 @@ async def web_search(query: str, num_results: int) -> str:
         raise RuntimeError(f"Failed to search the web for '{query}': {e}.") from e
 
 
-def web_scrape(url: str) -> str:
+async def web_scrape(url: str) -> str:
     """Visit the given URL and return the content.
 
     The content will contain only text and links.
