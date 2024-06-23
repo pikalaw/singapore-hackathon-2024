@@ -22,7 +22,7 @@ def agent(
     """Generates an output using a generative model.
 
     Args:
-        output_type: The type of output to generate.
+        output_type: The type of output to generate. It must be either a Pydantic model or `str`.
         instruction: The instruction to use for generating the output.
         data: The data to use for generating the output.
         tools: The tools to use for generating the output.

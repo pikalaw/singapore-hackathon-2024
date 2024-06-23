@@ -228,7 +228,7 @@ class Payment(BaseModel):
 def boss(work: str) -> Payment:
     return agent(
         Payment,
-        instruction="You are the boss. Please assign tasks to Alice, Bob, and Carol.",
+        instruction="You are the boss. Please assign tasks to Alice, Bob, Carol, and Dave.",
         data=work,
         tools=[alice, bob, carol, dave],
     )
