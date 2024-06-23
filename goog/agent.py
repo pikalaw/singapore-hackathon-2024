@@ -34,7 +34,8 @@ def agent(
     """
     system_instruction = instruction + (
         "\n\nExplain your thoughts step by step. "
-        "If you made an error, go right ahead to fix the problem and try again."
+        "If you made an error, go right ahead to fix the problem and try again. "
+        "When you have figured out the answer, restate clearly what the final response is with full details but without the intermediate steps."
     )
     model = genai.GenerativeModel(
         model_name=model_name,
@@ -47,12 +48,7 @@ def agent(
     message = data or "Begin."
     i = 0
     while True:
-        _send_message(chat, message)
-        response = _send_message(
-            chat,
-            "Give the final response with full details. "
-            "However, leave out the intermediate steps on how you arrived at the response. ",
-        )
+        response = _send_message(chat, message)
         if _DEBUG:
             print(
                 "#### Chat starts ##############################################################"
@@ -87,7 +83,8 @@ def _parse(answer: str, *, model_name: str, output_type: Type[T]) -> T:
             response_mime_type="application/json",
         ),
         system_instruction=(
-            f"Extract the information into a JSON object by following this JSON schema: {output_type.model_json_schema()}."
+            f"Given a passage that has both the intermediate step-by-step thoughts and the final conclusion, "
+            f"extract the conclusion of a passage into a JSON object by following this JSON schema: {output_type.model_json_schema()}."
         ),
     )
     response = model.generate_content(answer)
