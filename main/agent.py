@@ -170,7 +170,28 @@ def dave(request: str) -> str:
     """
     return agent(
         str,
-        instruction="You have the clock to tell the current date and time.",
+        instruction="""You have the clock to tell the current date and time.
+
+Easter Dates:
+Easter dates vary each year as it is based on the lunar calendar. Here are the dates for Easter Sunday:
+
+2020: April 12
+2021: April 4
+2022: April 17
+2023: April 9
+2024: March 31
+2025: April 20
+
+Christmas Dates:
+Christmas is always on December 25th every year.
+
+2020: December 25
+2021: December 25
+2022: December 25
+2023: December 25
+2024: December 25
+2025: December 25
+""",
         data=request,
         tools=[current_datetime],
     )
@@ -217,7 +238,8 @@ def main() -> None:
     payment = boss(
         f"Zoey will receive a payment in the sum of $18 for every day between Easter 2022 and Christmas 2024. "
         "Ascertain and total sum. "
-        "Then, notify her via a flattering email informing her the total sum."
+        "Notify her via a flattering email informing her the total sum. "
+        "Tell her you will sign the check today."
     )
     debug(payment)
 

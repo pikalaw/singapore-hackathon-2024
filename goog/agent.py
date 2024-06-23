@@ -1,7 +1,8 @@
-from typing import Type, TypeVar
+from goog.decorators import retry_on_server_error
 import google.generativeai as genai
 import logging
 from pydantic import BaseModel, ValidationError
+from typing import Type, TypeVar
 
 T = TypeVar("T")
 
@@ -43,20 +44,24 @@ def agent(
     )
     chat = model.start_chat(enable_automatic_function_calling=True)
 
-    message = data
+    message = data or "Begin."
     i = 0
     while True:
-        chat.send_message(message)
-        response = chat.send_message(
-            "Give the final response with details but without the intermediate reasoning. "
-            "Don't add anything else. "
-            "Just a succinct response."
+        _send_message(chat, message)
+        response = _send_message(
+            chat,
+            "Give the final response with full details. "
+            "However, leave out the intermediate steps on how you arrived at the response. ",
         )
         if _DEBUG:
-            print("#### Chat starts")
+            print(
+                "#### Chat starts ##############################################################"
+            )
             for message in chat.history:
                 print(f"Message: {message}")
-            print("#### Chat ends")
+            print(
+                "#### Chat ends ##############################################################"
+            )
 
         if output_type is str:
             return response.text
@@ -102,7 +107,14 @@ def _format_feedback(e: ValidationError, cls: Type[BaseModel]) -> str:
         for i, error in enumerate(e.errors())
     ]
     return "\n\n".join(
-        [f"Failed to parse the final response into a JSON object."]
+        [f"Failed to parse the final response."]
         + error_details
         + ["Please resolve the error and restate the final response."]
     )
+
+
+@retry_on_server_error
+def _send_message(
+    chat: genai.ChatSession, message: genai.types.ContentType
+) -> genai.types.GenerateContentResponse:
+    return chat.send_message(message)
