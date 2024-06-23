@@ -93,7 +93,7 @@ class FunctionCalling(BaseModel, frozen=True):
         ]
 
 
-class ChatSession(BaseModel, frozen=True):
+class ChatSession(BaseModel, frozen=True, arbitrary_types_allowed=True):
     model: genai.GenerativeModel
     tools: FunctionCalling | None = Field(default=None)
     conversation: list[genai.protos.Content] = Field(default_factory=list)
@@ -102,6 +102,10 @@ class ChatSession(BaseModel, frozen=True):
         self,
         message: genai.types.ContentType,
     ) -> genai.types.GenerateContentResponse:
+        self.conversation.append(
+            genai.protos.Content(parts=[genai.protos.Part(text=message)], role="user")
+        )
+
         while True:
             response = await self.model.generate_content_async(self.conversation)
             _check_response(response)
