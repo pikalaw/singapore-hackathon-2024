@@ -1,6 +1,6 @@
 import asyncio
-import google.generativeai as genai
 from google.ai import generativelanguage as glm
+import google.generativeai as genai
 from pydantic import BaseModel, Field, field_validator
 import logging
 from typing import Any, AsyncIterator, Awaitable, Callable, Iterable
@@ -62,7 +62,8 @@ class FunctionCalling(BaseModel, frozen=True):
     ) -> AsyncIterator[glm.Part]:
         failed = False
         for part in model_responses:
-            if function_call := part.function_call:
+            if "function_call" in part:
+                function_call = part.function_call
                 if failed:
                     yield glm.Part(
                         function_response=glm.FunctionResponse(
@@ -84,7 +85,7 @@ class FunctionCalling(BaseModel, frozen=True):
             *[
                 self.call_once(part.function_call)
                 for part in model_responses
-                if part.function_call
+                if "function_call" in part
             ],
         )
         return [
@@ -116,13 +117,21 @@ class ChatSession(BaseModel, frozen=True, arbitrary_types_allowed=True):
             _check_response(response)
 
             response_content = response.candidates[0].content
-            self.conversation.append(response_content)
+            self.conversation.append(
+                glm.Content(parts=response_content.parts, role=response_content.role)
+            )
 
             if (
                 (not self.tools)
                 or (not self.tools.has_functions)
                 or (
-                    len([part for part in response_content.parts if part.function_call])
+                    len(
+                        [
+                            part
+                            for part in response_content.parts
+                            if "function_call" in part
+                        ]
+                    )
                     == 0
                 )
             ):
