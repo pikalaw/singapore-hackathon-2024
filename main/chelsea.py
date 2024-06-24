@@ -3,7 +3,8 @@ from agents.webber import web_scraper, web_searcher
 from datetime import datetime
 from devtools import debug
 from goog import agent
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+from typing_extensions import Self
 
 
 async def current_datetime() -> str:
@@ -17,12 +18,20 @@ async def current_datetime() -> str:
 
 
 class NextTopics(BaseModel):
-    """Next set of topics to search on."""
+    """Top 10 topics to search for next."""
 
     topics: list[str] = Field(
         default_factory=list,
-        description="Topics",
+        description="Topics from the article that would enhance the user's experience.",
     )
+
+    @model_validator(mode="after")
+    def check_nonempty_list(self) -> Self:
+        if len(self.topics) == 0:
+            raise ValueError(
+                "The list of topics cannot be empty. Please provide some suggestions."
+            )
+        return self
 
 
 async def chelsea(request: str) -> NextTopics:

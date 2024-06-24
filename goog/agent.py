@@ -78,7 +78,7 @@ async def agent(
         try:
             return await _parse(response.text, model_name=model_name, output_type=output_type)  # type: ignore
         except ValidationError as ex:
-            logging.error(f"Attempt #{i}. Failed to parse `{response.text}`: {ex}")
+            logging.exception(f"Attempt #{i}. Failed to parse: {response.text}")
             if i > 3:
                 raise RuntimeError(response.text) from ex
             message = _format_feedback(ex, output_type)
@@ -108,14 +108,21 @@ async def _parse(answer: str, *, model_name: str, output_type: Type[T]) -> T:
 
 
 def _format_feedback(e: ValidationError, cls: Type[BaseModel]) -> str:
-    error_details = [
-        f"Error #{i + 1}:\n"
-        f"Field: {error['loc']}\n"
-        f"Field description: {cls.model_fields[str(error['loc'][0])].description}\n"
-        f"Invalid value: {error['input']}\n"
-        f"Error message: {error['msg']}\n"
-        for i, error in enumerate(e.errors())
-    ]
+    """Formats a descriptive feedback to the model for self-correction."""
+    error_details: list[str] = []
+    for i, error in enumerate(e.errors()):
+        error_detail = f"Error #{i + 1}:\n"
+        if error["loc"]:
+            field_name = str(error["loc"][0])
+            error_detail += (
+                f"Field: {error['loc']}\n"
+                f"Field description: {cls.model_fields[field_name].description}\n"
+                f"Invalid value: {error['input']}\n"
+            )
+        error_detail += f"Error message: {error['msg']}\n"
+
+        error_details.append(error_detail)
+
     return "\n\n".join(
         [f"Failed to parse the final response."]
         + error_details
