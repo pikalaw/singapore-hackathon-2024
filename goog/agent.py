@@ -57,7 +57,7 @@ async def agent(
     )
     chat = ChatSession(model=model, tools=function_calling)
 
-    message = data or "Begin."
+    message = str(data) or "Begin."
     i = 0
     while True:
         response = await _send_message(chat, message)

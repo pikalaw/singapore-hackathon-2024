@@ -1,9 +1,9 @@
 import asyncio
 import google.generativeai as genai
-from google.generativeai import protos
+from google.ai import generativelanguage as glm
 from pydantic import BaseModel, Field, field_validator
 import logging
-from typing import Any, AsyncIterator, Awaitable, Callable, Iterable, Mapping
+from typing import Any, AsyncIterator, Awaitable, Callable, Iterable
 
 
 class FunctionCalling(BaseModel, frozen=True):
@@ -35,15 +35,14 @@ class FunctionCalling(BaseModel, frozen=True):
         if self.functions:
             if isinstance(self.functions, list):
                 for function in self.functions:
+                    assert isinstance(function, Callable)
                     self.func[function.__name__] = function
             elif isinstance(self.functions, dict):
                 self.func = self.functions
 
-    async def call_once(
-        self, function_call: protos.FunctionCall
-    ) -> protos.FunctionResponse:
+    async def call_once(self, function_call: glm.FunctionCall) -> glm.FunctionResponse:
+        function_name = function_call.name
         try:
-            function_name = function_call.name
             if function_name not in self.func:
                 raise ValueError(f"Function {function_name} not found.")
 
@@ -52,23 +51,21 @@ class FunctionCalling(BaseModel, frozen=True):
             if not isinstance(result, dict):
                 result = {"success": result}
 
-            return protos.FunctionResponse(name=function_name, response=result)
+            return glm.FunctionResponse(name=function_name, response=result)
         except Exception as e:
             logging.exception(e)
-            return protos.FunctionResponse(
-                name=function_name, response={"error": str(e)}
-            )
+            return glm.FunctionResponse(name=function_name, response={"error": str(e)})
 
     async def call_sequentially(
         self,
-        model_responses: Iterable[protos.Part],
-    ) -> AsyncIterator[protos.Part]:
+        model_responses: Iterable[glm.Part],
+    ) -> AsyncIterator[glm.Part]:
         failed = False
         for part in model_responses:
             if function_call := part.function_call:
                 if failed:
-                    yield protos.Part(
-                        function_response=protos.FunctionResponse(
+                    yield glm.Part(
+                        function_response=glm.FunctionResponse(
                             name=function_call.name,
                             response={"skipped": "Previous function call failed."},
                         )
@@ -78,11 +75,11 @@ class FunctionCalling(BaseModel, frozen=True):
                 response = await self.call_once(function_call)
                 if "error" in response.response:
                     failed = True
-                yield protos.Part(function_response=response)
+                yield glm.Part(function_response=response)
 
     async def call_parallelly(
-        self, model_responses: Iterable[protos.Part]
-    ) -> Iterable[protos.Part]:
+        self, model_responses: Iterable[glm.Part]
+    ) -> Iterable[glm.Part]:
         results = await asyncio.gather(
             *[
                 self.call_once(part.function_call)
@@ -91,7 +88,7 @@ class FunctionCalling(BaseModel, frozen=True):
             ],
         )
         return [
-            protos.Part(function_response=response)
+            glm.Part(function_response=response)
             for response in results
             if not isinstance(response, Exception)
         ]
@@ -100,10 +97,10 @@ class FunctionCalling(BaseModel, frozen=True):
 class ChatSession(BaseModel, frozen=True, arbitrary_types_allowed=True):
     model: genai.GenerativeModel
     tools: FunctionCalling | None = Field(default=None)
-    conversation: list[genai.protos.Content] = Field(default_factory=list)
+    conversation: list[glm.Content] = Field(default_factory=list)
 
     @property
-    def history(self) -> Iterable[genai.protos.Content]:
+    def history(self) -> Iterable[glm.Content]:
         return self.conversation
 
     async def send_message(
@@ -111,7 +108,7 @@ class ChatSession(BaseModel, frozen=True, arbitrary_types_allowed=True):
         message: genai.types.ContentType,
     ) -> genai.types.GenerateContentResponse:
         self.conversation.append(
-            genai.protos.Content(parts=[genai.protos.Part(text=message)], role="user")
+            glm.Content(parts=[glm.Part(text=message)], role="user")
         )
 
         while True:
@@ -135,7 +132,7 @@ class ChatSession(BaseModel, frozen=True, arbitrary_types_allowed=True):
                 response_content.parts
             )
             self.conversation.append(
-                genai.protos.Content(parts=function_calling_response_parts, role="user")
+                glm.Content(parts=function_calling_response_parts, role="user")
             )
 
         return response
@@ -145,8 +142,8 @@ def _check_response(response: genai.types.AsyncGenerateContentResponse) -> None:
     if response.prompt_feedback.block_reason:
         raise genai.types.BlockedPromptException(response.prompt_feedback)
     if response.candidates[0].finish_reason not in (
-        genai.protos.Candidate.FinishReason.FINISH_REASON_UNSPECIFIED,
-        genai.protos.Candidate.FinishReason.STOP,
-        genai.protos.Candidate.FinishReason.MAX_TOKENS,
+        glm.Candidate.FinishReason.FINISH_REASON_UNSPECIFIED,
+        glm.Candidate.FinishReason.STOP,
+        glm.Candidate.FinishReason.MAX_TOKENS,
     ):
         raise genai.types.StopCandidateException(response.candidates[0])
