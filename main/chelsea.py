@@ -7,7 +7,7 @@ from typing_extensions import Self
 
 async def main() -> None:
     agent.configure(debug=True)
-    suggestions = await next_search_recommender("Goerge Washington?")
+    suggestions = await next_search_recommender("Goerge Washington")
     debug(suggestions)
 
 

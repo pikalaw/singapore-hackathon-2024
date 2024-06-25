@@ -1,23 +1,15 @@
-from agents.webber import web_scraper, web_searcher
-from datetime import datetime
-from devtools import debug
+from agents.webber import web_researcher
+from functions.real_time import current_datetime
 from goog import agent
 from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self
 
 
-async def current_datetime() -> str:
-    """Returns the current date and time.
-
-    Returns:
-        The current date and time.
-    """
-    print("Getting the current date and time.")
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+_NUM_NEXT_TOPICS = 5
 
 
 class NextTopics(BaseModel):
-    """Top 10 topics to search for next from an article."""
+    f"""Top {_NUM_NEXT_TOPICS} topics to search for next from an article."""
 
     original_topic: str = Field(
         description="The original topic that the user searched for.",
@@ -53,12 +45,12 @@ async def next_search_recommender(request: str) -> NextTopics:
             "Another example: if the article is a photo, spot any interesting object in the photo and suggest to search more about that object.\n\n"
             "I will give you a topic. "
             "Search the internet for a relevant article. "
-            "Read it and suggest the top 10 topics to search for next. "
+            f"Read it and suggest the top {_NUM_NEXT_TOPICS} topics to search for next. "
+            "Restate the original topic and list the next topics as your final response."
         ),
         data=request,
         tools=[
             current_datetime,
-            web_scraper,
-            web_searcher,
+            web_researcher,
         ],
     )
