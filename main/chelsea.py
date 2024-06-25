@@ -2,7 +2,17 @@ from agents.next_search_recommender import next_search_recommender
 import asyncio
 from devtools import debug
 from goog import agent
-from typing_extensions import Self
+import logging
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("chelsea.log"),
+        logging.StreamHandler(),
+    ],
+)
 
 
 async def main() -> None:

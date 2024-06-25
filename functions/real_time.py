@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 
 
 async def current_datetime() -> str:
@@ -7,5 +8,5 @@ async def current_datetime() -> str:
     Returns:
         The current date and time.
     """
-    print("Getting the current date and time.")
+    logging.info("Getting the current date and time.")
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")

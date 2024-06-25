@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup, Comment, NavigableString
 from googlesearch import search
+import logging
 import urllib.request
 
 
@@ -15,7 +16,7 @@ async def web_search(query: str, num_results: int) -> str:
     Returns:
       A string containing the search results.
     """
-    print(f"Searching the web for '{query}'.")
+    logging.info(f"Searching the web for '{query}'.")
     try:
         results = search(query, num_results=num_results, advanced=True)
 
@@ -42,7 +43,7 @@ async def web_scrape(url: str) -> str:
     Returns:
       A string containing the content of the page.
     """
-    print(f"Scraping the web for '{url}'.")
+    logging.info(f"Scraping the web for '{url}'.")
     with urllib.request.urlopen(url) as response:
         content_type = response.headers.get("Content-Type")
 

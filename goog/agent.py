@@ -68,13 +68,13 @@ async def agent(
     while True:
         response = await _send_message(chat, message)
         if _DEBUG:
-            print(
+            logging.info(
                 "#### Chat starts ##############################################################"
             )
-            print(f"Instruction: {system_instruction}")
+            logging.info(f"Instruction: {system_instruction}")
             for message in chat.history:
-                print(f"Message: {message}")
-            print(
+                logging.info(f"Message: {message}")
+            logging.info(
                 "#### Chat ends ##############################################################"
             )
 
@@ -109,7 +109,7 @@ async def _parse(answer: str, *, model_name: str, output_type: Type[T]) -> T:
     )
     response = await model.generate_content_async(answer)
     if _DEBUG:
-        print(f"Parsed: {response.text}")
+        logging.info(f"Parsing: {response.text}")
 
     return output_type.model_validate_json(response.text)  # type: ignore
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 
 
 async def add(a: float, b: float) -> float:
@@ -11,7 +12,7 @@ async def add(a: float, b: float) -> float:
     Returns:
         The sum of the two numbers.
     """
-    print(f"Adding {a} and {b}.")
+    logging.info(f"Adding {a} and {b}.")
     return a + b
 
 
@@ -25,7 +26,7 @@ async def subtract(a: float, b: float) -> float:
     Returns:
         The difference between the two numbers.
     """
-    print(f"Subtracting {b} from {a}.")
+    logging.info(f"Subtracting {b} from {a}.")
     return a - b
 
 
@@ -39,7 +40,7 @@ async def multiply(a: float, b: float) -> float:
     Returns:
         The product of the two numbers.
     """
-    print(f"Multiplying {a} by {b}.")
+    logging.info(f"Multiplying {a} by {b}.")
     return a * b
 
 
@@ -53,7 +54,7 @@ async def divide(a: float, b: float) -> float:
     Returns:
         The result of dividing the two.
     """
-    print(f"Dividing {a} by {b}.")
+    logging.info(f"Dividing {a} by {b}.")
     return a / b
 
 
@@ -66,7 +67,7 @@ async def math(expression: str) -> float:
     Returns:
         The result of the mathematical expression.
     """
-    print(f"Evaluating the expression: {expression}.")
+    logging.info(f"Evaluating the expression: {expression}.")
     return eval(expression)
 
 
@@ -80,7 +81,7 @@ async def diff_date(a: str, b: str) -> int:
     Returns:
         The number of days from a to b.
     """
-    print(f"Calculating the difference between {a} and {b}.")
+    logging.info(f"Calculating the difference between {a} and {b}.")
     date_format = "%Y-%m-%d"
     date_a = datetime.strptime(a, date_format).date()
     date_b = datetime.strptime(b, date_format).date()
