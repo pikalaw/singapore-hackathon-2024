@@ -5,11 +5,8 @@ from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self
 
 
-_NUM_NEXT_TOPICS = 5
-
-
 class NextTopics(BaseModel):
-    f"""Top {_NUM_NEXT_TOPICS} topics to search for next from an article."""
+    """Top N topics to search for next from an article."""
 
     original_topic: str = Field(
         description="The original topic that the user searched for.",
@@ -45,8 +42,7 @@ async def next_search_recommender(request: str) -> NextTopics:
             "Another example: if the article is a photo, spot any interesting object in the photo and suggest to search more about that object.\n\n"
             "I will give you a topic. "
             "Search the internet for a relevant article. "
-            f"Read it and suggest the top {_NUM_NEXT_TOPICS} topics to search for next. "
-            "Restate the original topic and list the next topics as your final response."
+            f"Read it and suggest the top 5 topics to search for next. "
         ),
         data=request,
         tools=[

@@ -46,8 +46,14 @@ async def agent(
     system_instruction = instruction + (
         "\n\nExplain your thoughts step by step. "
         "If you made an error, go right ahead to fix the problem and try again. "
-        "When you have figured out the answer, restate clearly what the final response is with full details but without the intermediate steps."
+        "When you have figured out the answer, restate clearly what the final response is with the full details but without the intermediate steps.\n"
     )
+    if issubclass(output_type, BaseModel):
+        system_instruction += (
+            "Your final response should include the following information:\n"
+            + _format_model_description(output_type)
+        )
+
     function_calling = FunctionCalling(functions=list(tools) if tools else None)
     model = genai.GenerativeModel(
         model_name=model_name,
@@ -65,6 +71,7 @@ async def agent(
             print(
                 "#### Chat starts ##############################################################"
             )
+            print(f"Instruction: {system_instruction}")
             for message in chat.history:
                 print(f"Message: {message}")
             print(
@@ -105,6 +112,30 @@ async def _parse(answer: str, *, model_name: str, output_type: Type[T]) -> T:
         print(f"Parsed: {response.text}")
 
     return output_type.model_validate_json(response.text)  # type: ignore
+
+
+def _format_model_description(cls: Type[BaseModel]) -> str:
+    """Formats the description of the model for self-correction."""
+    return "\n".join(
+        [
+            f"""
+Final response:
+```
+{cls.__doc__}
+```
+""",
+            "Details to include in the final response.",
+        ]
+        + [
+            f"""
+{field_name}:
+```
+{field.description}
+```
+"""
+            for field_name, field in cls.model_fields.items()
+        ]
+    )
 
 
 def _format_feedback(e: ValidationError, cls: Type[BaseModel]) -> str:
