@@ -19,4 +19,5 @@ async def math_professor(request: str) -> str:
             math.math,
             math.diff_date,
         ],
+        model_name="gemini-1.5-flash-latest",
     )

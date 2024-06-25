@@ -24,6 +24,7 @@ async def web_researcher(request: str) -> str:
         ),
         data=request,
         tools=[math_professor, web_searcher, web_scraper],
+        model_name="gemini-1.5-flash-latest",
     )
 
 
@@ -45,6 +46,7 @@ async def web_searcher(request: str) -> str:
         ),
         data=request,
         tools=[web_search],
+        model_name="gemini-1.5-flash-latest",
     )
 
 
@@ -67,4 +69,5 @@ async def web_scraper(request: str) -> str:
         ),
         data=request,
         tools=[web_scrape],
+        model_name="gemini-1.5-flash-latest",
     )

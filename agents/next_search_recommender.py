@@ -50,4 +50,5 @@ async def next_search_recommender(request: str) -> NextTopics:
             current_datetime,
             web_researcher,
         ],
+        model_name="gemini-1.5-flash-latest",
     )
