@@ -25,7 +25,8 @@ async def main() -> None:
     while True:
         user_query = input(f"\n{USER_STYLE}You{RESET_STYLE}: ")
         suggestions = await next_search_recommender(user_query)
-        print(f"\n{MODEL_STYLE}Model{RESET_STYLE}: {debug.format(suggestions)}")
+        print(f"\n{MODEL_STYLE}Model{RESET_STYLE}:")
+        debug(suggestions)
 
 
 if __name__ == "__main__":
