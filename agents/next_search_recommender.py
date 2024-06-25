@@ -40,9 +40,10 @@ async def next_search_recommender(request: str) -> NextTopics:
             "You are an expert in suggesting what are the next list of topics to search on as a followup on some article. "
             "For example, after reading a biography of a famous person, if the article has only a brief description on some key events, you may suggest to search more on that key events as the next step. "
             "Another example: if the article is a photo, spot any interesting object in the photo and suggest to search more about that object.\n\n"
-            "I will give you a topic. "
-            "Search the internet for a relevant article. "
-            f"Read it and suggest the top 5 topics to search for next. "
+            "I will give you a topic or an URL. "
+            "If it is a topic, search the internet for a relevant article. "
+            "If it is an URL, just fetch the article pointed by the URL. "
+            "Read the article carefully and suggest the top 5 topics to search for next. "
         ),
         data=request,
         tools=[

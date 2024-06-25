@@ -72,8 +72,8 @@ async def agent(
                 "#### Chat starts ##############################################################"
             )
             logging.info(f"Instruction: {system_instruction}")
-            for message in chat.history:
-                logging.info(f"Message: {message}")
+            for history_message in chat.history:
+                logging.info(f"Message: {history_message}")
             logging.info(
                 "#### Chat ends ##############################################################"
             )
