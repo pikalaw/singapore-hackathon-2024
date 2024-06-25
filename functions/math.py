@@ -1,74 +1,66 @@
-from datetime import datetime
+"""A collection of mathematical functions."""
+
+import ast
+import datetime
 import logging
+import operator
 
 
-async def add(a: float, b: float) -> float:
-    """Adds two numbers together.
-
-    Args:
-        a: The first number.
-        b: The second number.
-
-    Returns:
-        The sum of the two numbers.
-    """
-    logging.info(f"Adding {a} and {b}.")
-    return a + b
-
-
-async def subtract(a: float, b: float) -> float:
-    """Subtracts one number from another.
+def _evaluate_arithmetic_expression(expression_str: str):
+    """Evaluates a string containing a valid arithmetic expression.
 
     Args:
-        a: The first number.
-        b: The second number.
+        expression_str: The string representation of the arithmetic expression.
 
     Returns:
-        The difference between the two numbers.
+        The calculated result of the expression, or None if the expression is
+        invalid.
     """
-    logging.info(f"Subtracting {b} from {a}.")
-    return a - b
 
+    # Define allowed operators
+    allowed_operators = {
+        ast.Add: operator.add,
+        ast.Sub: operator.sub,
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+        ast.Pow: operator.pow,
+        ast.USub: operator.neg,
+    }
 
-async def multiply(a: float, b: float) -> float:
-    """Multiplies two numbers together.
+    # Parse the expression into an AST
+    tree = ast.parse(expression_str, mode="eval").body
 
-    Args:
-        a: The first number.
-        b: The second number.
+    # Function to recursively evaluate the AST nodes
+    def eval_node(node):
+        if isinstance(node, ast.Constant):
+            return node.n
+        elif isinstance(node, ast.BinOp):
+            op = allowed_operators.get(type(node.op))
+            if op is None:
+                raise ValueError("Invalid operator")
+            return op(eval_node(node.left), eval_node(node.right))
+        elif isinstance(node, ast.UnaryOp):
+            op = allowed_operators.get(type(node.op))
+            if op is None:
+                raise ValueError("Invalid operator")
+            return op(eval_node(node.operand))
+        else:
+            raise ValueError("Invalid expression")
 
-    Returns:
-        The product of the two numbers.
-    """
-    logging.info(f"Multiplying {a} by {b}.")
-    return a * b
-
-
-async def divide(a: float, b: float) -> float:
-    """Divides one number by another.
-
-    Args:
-        a: The first number.
-        b: The second number.
-
-    Returns:
-        The result of dividing the two.
-    """
-    logging.info(f"Dividing {a} by {b}.")
-    return a / b
+    return eval_node(tree)
 
 
 async def math(expression: str) -> float:
-    """Evaluates a mathematical expression.
+    """Evaluates a arithmetic expression.
 
     Args:
-        expression: The mathematical expression to evaluate.
+        expression: The arithmetic expression to evaluate.
 
     Returns:
-        The result of the mathematical expression.
+        The result of the arithmetic expression.
     """
-    logging.info(f"Evaluating the expression: {expression}.")
-    return eval(expression)
+    logging.info("Evaluating the expression: %s.", expression)
+    return float(_evaluate_arithmetic_expression(expression))
 
 
 async def diff_date(a: str, b: str) -> int:
@@ -81,9 +73,9 @@ async def diff_date(a: str, b: str) -> int:
     Returns:
         The number of days from a to b.
     """
-    logging.info(f"Calculating the difference between {a} and {b}.")
+    logging.info("Calculating the difference between %s and %s.", a, b)
     date_format = "%Y-%m-%d"
-    date_a = datetime.strptime(a, date_format).date()
-    date_b = datetime.strptime(b, date_format).date()
+    date_a = datetime.datetime.strptime(a, date_format).date()
+    date_b = datetime.datetime.strptime(b, date_format).date()
 
     return (date_a - date_b).days

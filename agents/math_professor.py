@@ -16,10 +16,6 @@ async def math_professor(request: str) -> str:
         instruction="You are an expert with math. Please solve this math problem.",
         data=request,
         tools=[
-            math.add,
-            math.subtract,
-            math.multiply,
-            math.divide,
             math.math,
             math.diff_date,
         ],
