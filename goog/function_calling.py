@@ -48,8 +48,16 @@ class FunctionCalling(BaseModel, frozen=True):
 
             function = self.func[function_name]
             result = await function(**function_call.args)
-            if not isinstance(result, dict):
-                result = {"success": result}
+
+            if isinstance(result, list):
+                result = {"results": result}
+            elif isinstance(result, tuple):
+                result = {"result": list(result)}
+            elif isinstance(result, dict):
+                # Keep the original keys.
+                pass
+            else:
+                result = {"result": result}
 
             return glm.FunctionResponse(name=function_name, response=result)
         except Exception as e:
