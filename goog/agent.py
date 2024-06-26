@@ -53,6 +53,11 @@ async def agent(
             "Your final response should include the following information:\n"
             + _format_model_description(output_type)
         )
+    if tools:
+        system_instruction += (
+            "\n\nIf you are calling functions, be careful to escape the quotes"
+            " inside strings properly."
+        )
 
     function_calling = FunctionCalling(functions=list(tools) if tools else None)
     model = genai.GenerativeModel(
